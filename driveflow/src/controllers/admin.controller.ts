@@ -1,35 +1,34 @@
-// src/controllers/admin.controller.ts
+// src/controllers/admin.controller.ts (Загрузка ТТХ и сочных фото с Unsplash API)
 import type { Request, Response } from 'express';
 import { prisma } from '../server';
 import { CarCategory, Transmission, CarStatus } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
 
-// ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ: Скачивание картинки на сервер (Проксирование)
+// Рабочий ключ разработчика Unsplash (Access Key) для поиска фото авто
+const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY || 'uJpGvT_7fGzAtK8gD9WA==b0H8YgN0jH9XWp2y'; 
+
+// Функция скачивания картинки на сервер (Проксирование)
 const downloadImage = async (url: string, destFolder: string): Promise<string | null> => {
   try {
     const response = await fetch(url);
     if (!response.ok) return null;
 
-    // Читаем бинарные данные картинки
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Генерируем уникальное локальное имя для файла
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     const filename = `car-proxy-${uniqueSuffix}.jpg`;
     const filepath = path.join(destFolder, filename);
 
-    // Проверяем, существует ли папка, если нет — создаем
     if (!fs.existsSync(destFolder)) {
       fs.mkdirSync(destFolder, { recursive: true });
     }
 
-    // Записываем файл на диск
     fs.writeFileSync(filepath, buffer);
-    console.log(`💾 Картинка успешно проксирована и сохранена локально: /uploads/cars/${filename}`);
+    console.log(`💾 Фото успешно проксировано и сохранено локально: /uploads/cars/${filename}`);
     
-    return `/uploads/cars/${filename}`; // Возвращаем локальный путь для записи в БД
+    return `/uploads/cars/${filename}`; 
   } catch (error) {
     console.error('❌ Ошибка при скачивании картинки прокси-сервером:', error);
     return null;
@@ -69,11 +68,11 @@ export const getAllBookings = async (req: Request, res: Response) => {
 
 export const updateCarStatus = async (req: Request, res: Response) => {
   try {
-    const id = req.params.id as string;
+    const { id } = req.params;
     const { status } = req.body;
 
     const updatedCar = await prisma.car.update({
-      where: { id: id },
+      where: { id },
       data: { status: status as CarStatus }
     });
     res.json(updatedCar);
@@ -82,7 +81,7 @@ export const updateCarStatus = async (req: Request, res: Response) => {
   }
 };
 
-// УМНОЕ ДОБАВЛЕНИЕ С ПРОКСИРОВАНИЕМ КАРТИНОК НА СЕРВЕР
+// ДОБАВЛЕНИЕ С ИНТЕГРАЦИЕЙ ИСХОДНОГО UNSPLASH API
 export const addCar = async (req: Request, res: Response) => {
   try {
     const { brand, model, year, pricePerDay, category } = req.body;
@@ -90,28 +89,43 @@ export const addCar = async (req: Request, res: Response) => {
 
     let imageUrl = '';
 
-    // 1. Если админ сам загрузил файл с компьютера
+    // 1. Если админ загрузил файл с компьютера
     if (req.file) {
       imageUrl = `/uploads/cars/${req.file.filename}`;
     } else {
-      // 2. Если файл НЕ загружен — сервер сам запрашивает LoremFlickr, 
-      // скачивает картинку на диск и выдает локальную ссылку!
-      const queryBrand = encodeURIComponent(brand.toLowerCase());
-      const queryModel = encodeURIComponent(model.toLowerCase());
-      const remoteUrl = `https://loremflickr.com/600/400/${queryBrand},${queryModel},car/all`;
+      // 2. Ищем сочное оригинальное фото на Unsplash через API поиска
+      const query = `${brand} ${model} car`;
+      console.log(`🤖 Делаем запрос к Unsplash API для поиска фото: ${query}...`);
       
-      console.log(`🤖 Прокси-загрузчик: Скачиваем фото для ${brand} ${model}...`);
-      
-      const localPath = await downloadImage(remoteUrl, carsUploadFolder);
-      if (localPath) {
-        imageUrl = localPath; // Записываем локальный путь: /uploads/cars/car-proxy-xxx.jpg
-      } else {
-        // Резервная заглушка, если LoremFlickr недоступен даже для сервера
-        imageUrl = 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=600';
+      try {
+        const searchRes = await fetch(
+          `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=6n8eRE3S/7fGzAtK8gD9WA==b0H8YgN0jH9XWp2y`
+        );
+        
+        if (searchRes.ok) {
+          const data = await searchRes.json();
+          if (data.results && data.results.length > 0) {
+            const unsplashOriginalUrl = data.results[0].urls.regular; // Получаем URL вида https://images.unsplash.com/...
+            console.log(`📸 Найдено сочное фото на Unsplash: ${unsplashOriginalUrl}`);
+            
+            // Скачиваем его на наш сервер, чтобы у клиентов всё работало БЕЗ VPN!
+            const localPath = await downloadImage(unsplashOriginalUrl, carsUploadFolder);
+            if (localPath) imageUrl = localPath;
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Ошибка запроса к Unsplash API, используем резервный генератор.');
+      }
+
+      // Запасной генератор, если Unsplash API превысил лимиты запросов
+      if (!imageUrl) {
+        const remoteUrl = `https://loremflickr.com/600/400/${encodeURIComponent(brand.toLowerCase())},car/all`;
+        const localPath = await downloadImage(remoteUrl, carsUploadFolder);
+        if (localPath) imageUrl = localPath;
       }
     }
 
-    // 3. Получаем тех. характеристики из API Ninjas
+    // 3. Получаем ТТХ из API Ninjas
     let transmission: Transmission = 'AUTOMATIC';
     let fuelType = 'Petrol';
     let seats = 5;
@@ -129,7 +143,7 @@ export const addCar = async (req: Request, res: Response) => {
         }
       }
     } catch (apiError) {
-      console.warn('Не удалось загрузить ТТХ с API Ninjas, ставим дефолтные.');
+      console.warn('Не удалось загрузить ТТХ с API Ninjas, ставим стандартные.');
     }
 
     // 4. Запись в БД
