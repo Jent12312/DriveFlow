@@ -1,13 +1,13 @@
 // src/main.ts
 declare const lucide: any;
 // @ts-ignore
-if (typeof lucide !== 'undefined') {
-  lucide.createIcons();
-}
+lucide.createIcons();
 
+// Автоопределение адреса API
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:3000/api'
-  : 'https://api.driveflow.jents.online/api'; 
+  : 'https://api.driveflow.jents.online/api';
+
 const carGrid = document.getElementById('car-grid');
 
 interface Car {
@@ -40,10 +40,14 @@ function renderCars(cars: Car[]) {
   cars.forEach(car => {
     const imageUrl = car.images && car.images.length > 0 ? car.images[0] : '';
     const fallbackImage = 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=600&auto=format&fit=crop';
+    
+    // Если ссылка начинается с /uploads (локальная), подставляем домен бэкенда
+    const finalImageUrl = imageUrl.startsWith('/') ? `${API_URL.replace('/api', '')}${imageUrl}` : imageUrl;
+
     const card = document.createElement('div');
     card.className = 'car-card';
     card.innerHTML = `
-      <img src="${imageUrl}" alt="${car.brand}" class="car-image" onerror="this.onerror=null; this.src='${fallbackImage}';">
+      <img src="${finalImageUrl}" alt="${car.brand}" class="car-image" onerror="this.onerror=null; this.src='${fallbackImage}';">
       <div class="car-content">
         <h3 class="car-title">${car.brand} ${car.model}</h3>
         <div class="car-specs">
@@ -59,16 +63,21 @@ function renderCars(cars: Car[]) {
     carGrid.appendChild(card);
   });
   // @ts-ignore
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
-  }
-
+  lucide.createIcons();
 }
 
 async function fetchCars() {
   renderSkeletons();
+  
+  const activeCategories = Array.from(document.querySelectorAll('.filter-category:checked')).map((input: any) => input.value);
+  const activeTransmissions = Array.from(document.querySelectorAll('.filter-transmission:checked')).map((input: any) => input.value);
+
+  const params = new URLSearchParams();
+  if (activeCategories.length > 0) params.append('category', activeCategories[0]);
+  if (activeTransmissions.length > 0) params.append('transmission', activeTransmissions[0]);
+
   try {
-    const response = await fetch(`${API_URL}/cars`);
+    const response = await fetch(`${API_URL}/cars?${params.toString()}`);
     const data = await response.json();
     renderCars(data);
   } catch (error) {
@@ -89,12 +98,9 @@ async function checkAuthStatus() {
     const userData = JSON.parse(user);
 
     try {
-      // Запрашиваем свежие данные пользователя с бэкенда
       const res = await fetch(`${API_URL}/users/${userData.id}`);
       if (res.ok) {
         const freshUser = await res.json();
-        
-        // Синхронизируем локальный кэш новыми данными (включая APPROVED статус KYC!)
         localStorage.setItem('user', JSON.stringify(freshUser));
         
         if (loginBtn) {
@@ -104,13 +110,12 @@ async function checkAuthStatus() {
         cabinetSection!.style.display = 'block';
         updateKycStatusUI(freshUser.kycStatus);
         loadUserBookings(freshUser.id);
-        return; // Выходим, так как данные успешно обновились
+        return; 
       }
     } catch (e) {
       console.warn('Сервер недоступен, используем локальный кэш для статуса KYC');
     }
 
-    // Запасной вариант (если сервер упал, берем данные из старого кэша)
     if (loginBtn) {
       loginBtn.textContent = `Выйти (${userData.firstName})`;
       loginBtn.classList.add('btn-black');
@@ -144,7 +149,7 @@ function updateKycStatusUI(status: string) {
   }
 }
 
-// Отправка документов на KYC проверку
+// Отправка документов на KYC
 document.getElementById('submit-kyc-btn')?.addEventListener('click', async () => {
   const user = localStorage.getItem('user');
   if (!user) return;
@@ -187,18 +192,18 @@ async function loadUserBookings(userId: string) {
     }
 
     list.innerHTML = '';
+    const backendHost = API_URL.replace('/api', '');
+
     bookings.forEach((b: any) => {
       let actionBtn = '';
       
-      // Если бронь ждет оплаты и KYC одобрен -> даем пройти осмотр
       if (b.status === 'PENDING') {
         actionBtn = `
           <button class="btn btn-primary" onclick="openInspectionModal('${b.id}')" style="padding: 6px 12px; font-size:12px;">Пройти фотоосмотр</button>
           <button class="btn" onclick="cancelBooking('${b.id}')" style="padding: 6px 12px; font-size:12px; color: red; border: 1px solid red;">Отменить</button>
         `;
       } else if (b.status === 'ACTIVE' && b.contractUrl) {
-        // Если аренда активна -> даем скачать договор
-        actionBtn = `<a href="http://localhost:3000${b.contractUrl}" target="_blank" class="btn btn-black" style="padding: 6px 12px; font-size:12px; text-decoration:none;">Скачать договор PDF 📄</a>`;
+        actionBtn = `<a href="${backendHost}${b.contractUrl}" target="_blank" class="btn btn-black" style="padding: 6px 12px; font-size:12px; text-decoration:none;">Скачать договор PDF 📄</a>`;
       } else {
         actionBtn = `<span style="font-size: 12px; color: var(--text-muted);">${b.status}</span>`;
       }
@@ -222,7 +227,7 @@ async function loadUserBookings(userId: string) {
   }
 }
 
-// ОТМЕНА БРОНИ КЛИЕНТОМ
+// Отмена брони
 (window as any).cancelBooking = async (id: string) => {
   if (!confirm('Вы уверены, что хотите отменить бронирование?')) return;
   try {
@@ -236,13 +241,12 @@ async function loadUserBookings(userId: string) {
   }
 };
 
-// ОТКРЫТИЕ МОДАЛКИ ОСМОТРА
+// Осмотр
 (window as any).openInspectionModal = (bookingId: string) => {
   (document.getElementById('inspect-booking-id') as HTMLInputElement).value = bookingId;
   document.getElementById('inspection-modal')?.classList.add('active');
 };
 
-// ОТПРАВКА ОСМОТРА (ФОТО) НА СЕРВЕР
 document.getElementById('inspection-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const formData = new FormData();
@@ -255,10 +259,7 @@ document.getElementById('inspection-form')?.addEventListener('submit', async (e)
   formData.append('right', (document.getElementById('file-right') as HTMLInputElement).files![0]);
 
   try {
-    const res = await fetch(`${API_URL}/inspections`, {
-      method: 'POST',
-      body: formData
-    });
+    const res = await fetch(`${API_URL}/inspections`, { method: 'POST', body: formData });
     if (res.ok) {
       alert('Осмотр пройден! Договор сформирован. Приятной поездки!');
       document.getElementById('inspection-modal')?.classList.remove('active');
@@ -272,7 +273,7 @@ document.getElementById('inspection-form')?.addEventListener('submit', async (e)
   }
 });
 
-// МОДАЛЬНОЕ ОКНО БРОНИРОВАНИЯ (С ПРОВЕРКОЙ KYC!)
+// Бронирование (Календарь)
 let selectedCar: Car | null = null;
 const modal = document.getElementById('booking-modal');
 const closeModalBtn = document.getElementById('close-modal');
@@ -291,9 +292,8 @@ const calcTotal = document.getElementById('calc-total');
   }
   const userData = JSON.parse(user);
   
-  // КРИТИЧЕСКИЙ БЛОК: Запрещаем бронирование, если KYC не APPROVED
   if (userData.kycStatus !== 'APPROVED') {
-    alert('Бронирование заблокировано! Пожалуйста, отправьте документы на проверку в Личном Кабинете и дождитесь одобрения администратором.');
+    alert('Бронирование заблокировано! Пожалуйста, отправьте документы на проверку в Личном Кабинете и дождитесь одобрения.');
     cabinetSection?.scrollIntoView({ behavior: 'smooth' });
     return;
   }
@@ -342,10 +342,7 @@ const calculatePrice = () => {
   calcTotal!.innerText = `${Math.round(totalPrice).toLocaleString()} ₽`;
 };
 
-startDateInput.addEventListener('change', () => {
-  endDateInput.min = startDateInput.value;
-  calculatePrice();
-});
+startDateInput.addEventListener('change', () => { endDateInput.min = startDateInput.value; calculatePrice(); });
 endDateInput.addEventListener('change', calculatePrice);
 
 document.getElementById('confirm-booking-btn')?.addEventListener('click', async () => {
@@ -375,7 +372,7 @@ document.getElementById('confirm-booking-btn')?.addEventListener('click', async 
   }
 });
 
-// Кнопка Входа/Регистрации (Переключение окон)
+// Кнопки Авторизации
 const closeAuthModalBtn = document.getElementById('close-auth-modal');
 const goToRegister = document.getElementById('go-to-register');
 const goToLogin = document.getElementById('go-to-login');
@@ -386,7 +383,6 @@ closeAuthModalBtn?.addEventListener('click', () => authModal?.classList.remove('
 goToRegister?.addEventListener('click', (e) => { e.preventDefault(); loginFormContainer!.style.display = 'none'; registerFormContainer!.style.display = 'block'; });
 goToLogin?.addEventListener('click', (e) => { e.preventDefault(); registerFormContainer!.style.display = 'none'; loginFormContainer!.style.display = 'block'; });
 
-// Отправка запроса Входа
 document.getElementById('submit-login-btn')?.addEventListener('click', async () => {
   const email = (document.getElementById('login-email') as HTMLInputElement).value;
   const password = (document.getElementById('login-password') as HTMLInputElement).value;
@@ -406,7 +402,6 @@ document.getElementById('submit-login-btn')?.addEventListener('click', async () 
   } catch (err) { alert('Ошибка авторизации'); }
 });
 
-// Отправка запроса Регистрации
 document.getElementById('submit-register-btn')?.addEventListener('click', async () => {
   const firstName = (document.getElementById('reg-name') as HTMLInputElement).value;
   const email = (document.getElementById('reg-email') as HTMLInputElement).value;
@@ -424,19 +419,20 @@ document.getElementById('submit-register-btn')?.addEventListener('click', async 
       authModal?.classList.remove('active');
       location.reload();
     } else { alert(data.error); }
-  } catch (err) { alert('Ошибка регистрации'); 
+  } catch (err) { alert('Ошибка регистрации'); }
 });
-                 
+
+// === ИНИЦИАЛИЗАЦИЯ И СТРАХОВКА СОБЫТИЙ ===
 document.addEventListener('DOMContentLoaded', () => {
   fetchCars();
   checkAuthStatus();
 
-  // Вешаем клик на фильтры ПОСЛЕ загрузки страницы
+  // Слушатели фильтров
   document.querySelectorAll('.filter-category, .filter-transmission').forEach(checkbox => {
     checkbox.addEventListener('change', fetchCars);
   });
 
-  // Вешаем клик на кнопку Войти ПОСЛЕ загрузки
+  // Логика кнопки Войти / Выйти
   const loginBtnEl = document.getElementById('login-btn');
   loginBtnEl?.addEventListener('click', () => {
     if (localStorage.getItem('user')) {
