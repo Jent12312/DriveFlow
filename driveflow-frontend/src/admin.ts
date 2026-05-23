@@ -62,7 +62,7 @@ async function loadDashboard() {
   const grid = document.getElementById('admin-photos-grid');
   if (!grid) return;
 
-  const backendHost = 'http://localhost:3000'; // Для продакшена будет автоматически подставляться твой IP/домен
+  const backendHost = API_URL.replace('/api', '').replace(/\/$/, '');
 
   grid.innerHTML = `
     <div><p style="font-size:12px; margin:0 0 4px 0; font-weight:600;">Спереди</p><img src="${backendHost}${inspection.frontImgUrl}" style="width:100%; height:180px; object-fit:cover; border-radius:8px; border:1px solid #E2E8F0;"></div>
