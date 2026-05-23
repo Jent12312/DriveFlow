@@ -424,10 +424,27 @@ document.getElementById('submit-register-btn')?.addEventListener('click', async 
       authModal?.classList.remove('active');
       location.reload();
     } else { alert(data.error); }
-  } catch (err) { alert('Ошибка регистрации'); }
-});
-
+  } catch (err) { alert('Ошибка регистрации'); 
+                 
 document.addEventListener('DOMContentLoaded', () => {
   fetchCars();
   checkAuthStatus();
+
+  // Вешаем клик на фильтры ПОСЛЕ загрузки страницы
+  document.querySelectorAll('.filter-category, .filter-transmission').forEach(checkbox => {
+    checkbox.addEventListener('change', fetchCars);
+  });
+
+  // Вешаем клик на кнопку Войти ПОСЛЕ загрузки
+  const loginBtnEl = document.getElementById('login-btn');
+  loginBtnEl?.addEventListener('click', () => {
+    if (localStorage.getItem('user')) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      checkAuthStatus();
+      location.reload();
+    } else {
+      authModal?.classList.add('active');
+    }
+  });
 });
