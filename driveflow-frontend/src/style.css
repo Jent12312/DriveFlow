@@ -197,3 +197,50 @@ body {
   border: 1px solid #CBD5E1;
   cursor: pointer;
 }
+
+/* Адаптация для мобильных устройств (Смартфоны) */
+@media (max-width: 768px) {
+  /* Чиним сетку каталога: фильтры сверху, машины снизу */
+  .catalog {
+    grid-template-columns: 1fr; /* Одна колонка вместо двух */
+    gap: 20px;
+    padding: 30px 20px;
+  }
+  
+  /* Боковая панель (Фильтры) */
+  .sidebar {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Фильтры в два столбика для экономии места */
+    background: var(--bg-surface);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #E2E8F0;
+  }
+
+  /* Чиним шапку (чтобы меню и кнопка не слипались) */
+  .header-inner {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 15px 0;
+    gap: 15px;
+  }
+  
+  .nav {
+    order: 3; /* Спускаем меню вниз */
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .nav a { margin: 0; font-size: 14px; }
+
+  /* Карточки машин: чтобы картинка не сплющивалась */
+  .car-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Личный кабинет на мобилках */
+  #cabinet-section > div {
+    grid-template-columns: 1fr !important;
+  }
+}
