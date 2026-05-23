@@ -1,6 +1,8 @@
 // src/admin.ts
 // @ts-ignore
-lucide.createIcons();
+if (typeof lucide !== 'undefined') {
+  lucide.createIcons();
+}
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:3000/api'
@@ -75,7 +77,9 @@ async function loadDashboard() {
   if (modal) modal.style.display = 'flex';
   
   // @ts-ignore
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 };
 
 async function loadFleetTab() {
