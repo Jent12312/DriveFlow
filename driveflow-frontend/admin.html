@@ -243,6 +243,119 @@
     .modal-close:hover {
       color: var(--text-main);
     }
+    /* ======================================================= */
+    /* 📱 АДАПТИВНОСТЬ ДЛЯ CRM (ПЛАНШЕТЫ И МОБИЛЬНЫЕ ТЕЛЕФОНЫ) */
+    /* ======================================================= */
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column; /* Сайдбар сверху, контент снизу */
+        height: auto;
+      }
+
+      /* Верхняя панель (бывший левый сайдбар) */
+      .sidebar {
+        width: 100%;
+        height: auto;
+        flex-direction: row; /* Элементы в строку */
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+        padding: 16px 20px;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        overflow-x: auto; /* Включаем горизонтальный скролл вкладок меню */
+        white-space: nowrap;
+        scrollbar-width: none; /* Убираем скроллбар в Firefox */
+      }
+      .sidebar::-webkit-scrollbar {
+        display: none; /* Убираем скроллбар в Chrome/Safari */
+      }
+
+      .logo {
+        margin-bottom: 0;
+        margin-right: 24px;
+        font-size: 18px;
+        flex-shrink: 0; /* Чтобы логотип не сжимался */
+      }
+
+      .nav-item {
+        margin-bottom: 0;
+        padding: 8px 14px;
+        font-size: 13px;
+        flex-shrink: 0; /* Чтобы вкладки не сжимались */
+        display: inline-flex;
+      }
+
+      /* Контентная область */
+      .main-content {
+        padding: 24px 16px;
+        overflow-y: visible; /* Отключаем внутреннюю прокрутку */
+      }
+
+      .page-title {
+        font-size: 22px;
+        margin-bottom: 24px;
+      }
+
+      /* Карточки аналитики на дашборде */
+      .stats-grid {
+        grid-template-columns: 1fr; /* Карточки выстраиваются в один ряд */
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+
+      .stat-card {
+        padding: 18px;
+      }
+
+      .stat-value {
+        font-size: 26px;
+      }
+
+      /* Форма умного добавления автомобиля */
+      #add-car-form {
+        grid-template-columns: 1fr !important; /* Все поля в один столбец */
+        gap: 12px;
+      }
+
+      #add-car-form .btn {
+        grid-column: span 1 !important; /* Кнопка на всю ширину */
+        margin-top: 12px;
+      }
+
+      /* 📊 ЗАЩИТА ТАБЛИЦ: Горизонтальный скролл */
+      /* Таблицы не сожмутся в кашу, менеджер сможет листать их пальцем вбок */
+      .table-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      table {
+        min-width: 600px; /* Минимальная ширина таблицы для комфортного чтения */
+      }
+
+      td, th {
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+
+      /* Модальное окно просмотра осмотра кузова */
+      .modal-content {
+        padding: 24px;
+        margin: 16px;
+        max-height: 92vh;
+        overflow-y: auto;
+      }
+
+      #admin-photos-grid {
+        grid-template-columns: 1fr !important; /* Фотки осмотра с 4 сторон выстраиваются в ленту */
+        gap: 12px;
+      }
+    }
   </style>
 </head>
 <body>
