@@ -39,10 +39,13 @@ function renderCars(cars: Car[]) {
   }
   cars.forEach(car => {
     const imageUrl = car.images && car.images.length > 0 ? car.images[0] : '';
-    const fallbackImage = 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=600&auto=format&fit=crop';
     
-    // Если ссылка начинается с /uploads (локальная), подставляем домен бэкенда
-    const finalImageUrl = imageUrl.startsWith('/') ? `${API_URL.replace('/api', '')}${imageUrl}` : imageUrl;
+    // Стабильный, легкий плейсхолдер, который 100% грузится без VPN в РФ
+    const fallbackImage = `https://placehold.co/600x400/1e293b/ffffff?text=${encodeURIComponent(car.brand + ' ' + car.model)}`;
+
+    // Безопасное формирование URL (убираем лишние слэши на стыке домена и пути)
+    const cleanBaseUrl = API_URL.replace('/api', '').replace(/\/$/, '');
+    const finalImageUrl = imageUrl.startsWith('/') ? `${cleanBaseUrl}${imageUrl}` : imageUrl;
 
     const card = document.createElement('div');
     card.className = 'car-card';
@@ -65,6 +68,7 @@ function renderCars(cars: Car[]) {
   // @ts-ignore
   lucide.createIcons();
 }
+
 
 async function fetchCars() {
   renderSkeletons();
