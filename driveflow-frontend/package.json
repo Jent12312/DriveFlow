@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "start": "npx server dist -l 3000"
+    "start": "npx serve dist -l 3000"
   },
   "devDependencies": {
     "typescript": "~6.0.2",
