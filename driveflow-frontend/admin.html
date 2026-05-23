@@ -1,0 +1,428 @@
+<!-- admin.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DriveFlow | CRM Панель</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Иконки Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    :root {
+      /* Цветовая палитра */
+      --bg-main: #F8FAFC;
+      --bg-surface: #FFFFFF;
+      --text-main: #1E293B;
+      --text-muted: #64748B;
+      --primary: #2563EB;
+      --primary-hover: #1D4ED8;
+      --border: #E2E8F0;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      
+      /* Тени */
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,0.06);
+    }
+
+    * { box-sizing: border-box; }
+    
+    body { 
+      margin: 0; 
+      font-family: 'Inter', sans-serif; 
+      background: var(--bg-main); 
+      display: flex; 
+      height: 100vh; 
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* Боковое меню (Sidebar) */
+    .sidebar { 
+      width: 260px; 
+      background: var(--bg-surface); 
+      border-right: 1px solid var(--border); 
+      padding: 24px; 
+      display: flex; 
+      flex-direction: column; 
+    }
+    .logo { 
+      font-size: 24px; 
+      font-weight: 800; 
+      color: var(--text-main); 
+      margin-bottom: 40px; 
+      letter-spacing: -0.5px;
+    }
+    .nav-item { 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      padding: 12px 16px; 
+      color: var(--text-muted); 
+      text-decoration: none; 
+      border-radius: var(--radius-md); 
+      font-weight: 500; 
+      transition: all 0.2s; 
+      cursor: pointer;
+      margin-bottom: 4px;
+    }
+    .nav-item:hover, .nav-item.active { 
+      background: var(--bg-main); 
+      color: var(--primary); 
+    }
+    .nav-item svg {
+      width: 18px;
+      height: 18px;
+    }
+    
+    /* Основной контентный блок */
+    .main-content { 
+      flex: 1; 
+      padding: 40px; 
+      overflow-y: auto; 
+    }
+    .page-title { 
+      margin-top: 0; 
+      color: var(--text-main); 
+      font-size: 28px; 
+      font-weight: 700;
+      margin-bottom: 32px;
+    }
+    
+    /* Карточки аналитики (Stats) */
+    .stats-grid { 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); 
+      gap: 24px; 
+      margin-bottom: 40px; 
+    }
+    .stat-card { 
+      background: var(--bg-surface); 
+      padding: 24px; 
+      border-radius: var(--radius-lg); 
+      border: 1px solid var(--border); 
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-title { 
+      color: var(--text-muted); 
+      font-size: 14px; 
+      font-weight: 500;
+      margin-bottom: 8px; 
+    }
+    .stat-value { 
+      color: var(--text-main); 
+      font-size: 32px; 
+      font-weight: 700; 
+      margin: 0;
+    }
+    
+    /* Контейнер таблиц */
+    .table-container { 
+      background: var(--bg-surface); 
+      border-radius: var(--radius-lg); 
+      border: 1px solid var(--border); 
+      overflow: hidden; 
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 40px; 
+    }
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      text-align: left; 
+    }
+    th { 
+      background: #F8FAFC; 
+      padding: 16px 24px; 
+      color: var(--text-muted); 
+      font-weight: 600; 
+      font-size: 11px; 
+      text-transform: uppercase; 
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+    td { 
+      padding: 18px 24px; 
+      border-bottom: 1px solid var(--border); 
+      color: var(--text-main); 
+      font-size: 14px; 
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    
+    /* Баджи статусов */
+    .badge { 
+      padding: 4px 10px; 
+      border-radius: 999px; 
+      font-size: 11px; 
+      font-weight: 600; 
+      display: inline-block;
+    }
+    .badge-available { background: #DCFCE7; color: #166534; }
+    .badge-rented { background: #DBEAFE; color: #1E40AF; }
+    .badge-maintenance { background: #FEF3C7; color: #92400E; }
+    
+    /* Универсальные кнопки действий */
+    .action-btn { 
+      background: var(--bg-surface); 
+      border: 1px solid var(--border); 
+      padding: 8px 16px; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      color: var(--text-main); 
+      font-weight: 500;
+      font-size: 13px;
+      transition: all 0.2s; 
+    }
+    .action-btn:hover { 
+      background: var(--bg-main); 
+      border-color: var(--text-muted);
+    }
+
+    /* Формы ввода и поля */
+    .form-group { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 6px; 
+      margin-bottom: 16px; 
+    }
+    .form-group label { 
+      font-size: 13px; 
+      font-weight: 600; 
+      color: var(--text-main); 
+    }
+    .form-group input, .form-group select { 
+      padding: 10px 14px; 
+      border: 1px solid var(--border); 
+      border-radius: 8px; 
+      outline: none; 
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg-main);
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--primary);
+    }
+
+    /* Модальное окно просмотра */
+    .modal-overlay {
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(15, 23, 42, 0.4); 
+      display: none; 
+      justify-content: center; 
+      align-items: center; 
+      z-index: 2000;
+      backdrop-filter: blur(4px);
+    }
+    .modal-content {
+      background: var(--bg-surface); 
+      padding: 32px; 
+      border-radius: var(--radius-lg); 
+      width: 100%; 
+      max-width: 650px; 
+      position: relative; 
+      box-shadow: var(--shadow-lg);
+    }
+    .modal-close { 
+      position: absolute; 
+      top: 20px; 
+      right: 20px; 
+      background: none; 
+      border: none; 
+      cursor: pointer; 
+      color: var(--text-muted); 
+    }
+    .modal-close:hover {
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Навигационная панель CRM -->
+  <aside class="sidebar">
+    <div class="logo">DriveFlow. CRM</div>
+    <div class="nav-item active" id="menu-dash"><i data-lucide="layout-dashboard"></i> Дашборд</div>
+    <div class="nav-item" id="menu-fleet"><i data-lucide="car"></i> Автопарк</div>
+    <div class="nav-item" id="menu-kyc"><i data-lucide="shield-check"></i> Модерация KYC</div>
+    <div class="nav-item" id="menu-settings"><i data-lucide="settings"></i> Настройки</div>
+  </aside>
+
+  <!-- Контентные секции -->
+  <main class="main-content">
+    
+    <!-- ВКЛАДКА 1: ДАШБОРД -->
+    <section id="tab-dashboard" class="crm-tab">
+      <h1 class="page-title">Сводка</h1>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-title">Активных аренд</div>
+          <div class="stat-value" id="stat-active">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Свободных авто</div>
+          <div class="stat-value" id="stat-cars">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Выручка (Месяц)</div>
+          <div class="stat-value" id="stat-revenue">0 ₽</div>
+        </div>
+      </div>
+
+      <h2 style="font-size: 20px; margin-bottom: 20px; font-weight: 700;">Последние бронирования</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Брони</th>
+              <th>Клиент</th>
+              <th>Автомобиль</th>
+              <th>Статус</th>
+              <th>Осмотр (Фото)</th>
+            </tr>
+          </thead>
+          <tbody id="bookings-tbody">
+            <!-- Записи генерируются динамически через admin.ts -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ВКЛАДКА 2: АВТОПАРК (УПРАВЛЕНИЕ И УМНОЕ ДОБАВЛЕНИЕ) -->
+    <section id="tab-fleet" class="crm-tab" style="display: none;">
+      <h1 class="page-title">Управление автопарком</h1>
+      
+      <!-- Форма добавления автомобиля -->
+      <div style="background: var(--bg-surface); padding: 28px; border-radius: var(--radius-lg); border: 1px solid var(--border); margin-bottom: 32px; box-shadow: var(--shadow-sm);">
+        <h3 style="margin-top: 0; margin-bottom: 4px; font-size: 18px; font-weight: 700;">Добавить автомобиль</h3>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 24px; margin-top:0;">
+          Загрузите локальный файл ИЛИ оставьте поле пустым — система сама найдет профессиональное фото в базе Unsplash.
+        </p>
+        <form id="add-car-form" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;" enctype="multipart/form-data">
+          <div class="form-group">
+            <label>Марка</label>
+            <input type="text" id="add-brand" placeholder="Например: Audi" required>
+          </div>
+          <div class="form-group">
+            <label>Модель</label>
+            <input type="text" id="add-model" placeholder="Например: A4" required>
+          </div>
+          <div class="form-group">
+            <label>Год выпуска</label>
+            <input type="number" id="add-year" placeholder="2021" required>
+          </div>
+          <div class="form-group">
+            <label>Цена за сутки (₽)</label>
+            <input type="number" id="add-price" placeholder="4500" required>
+          </div>
+          <div class="form-group">
+            <label>Категория</label>
+            <select id="add-category">
+              <option value="ECONOMY">Эконом</option>
+              <option value="BUSINESS">Бизнес-класс</option>
+              <option value="SUV">Внедорожник</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Фотография автомобиля (Файл)</label>
+            <input type="file" id="add-image-file" accept="image/*" style="padding: 7px;">
+          </div>
+          <button type="submit" class="btn action-btn" style="height: 42px; margin-top: 24px; background: var(--primary); color: white; border: none; grid-column: span 3; justify-content: center; font-weight: 600;">
+            Добавить автопарк
+          </button>
+        </form>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Автомобиль</th>
+              <th>Категория</th>
+              <th>Текущий статус</th>
+              <th>Действие</th>
+            </tr>
+          </thead>
+          <tbody id="fleet-tbody">
+            <!-- Заполняется в admin.ts -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ВКЛАДКА 3: МОДЕРАЦИЯ KYC КЛИЕНТОВ -->
+    <section id="tab-kyc" class="crm-tab" style="display: none;">
+      <h1 class="page-title">Модерация документов клиентов</h1>
+      <p style="color: var(--text-muted); margin-bottom: 32px; margin-top: -16px;">
+        Проверьте паспортные данные и права клиентов для разблокировки бронирования.
+      </p>
+      
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Клиент</th>
+              <th>Email</th>
+              <th>Паспорт</th>
+              <th>Водительские права</th>
+              <th>Действие</th>
+            </tr>
+          </thead>
+          <tbody id="kyc-tbody">
+            <!-- Сюда подгружаются пользователи на модерацию -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ВКЛАДКА 4: НАСТРОЙКИ СИСТЕМЫ -->
+    <section id="tab-settings" class="crm-tab" style="display: none;">
+      <h1 class="page-title">Настройки системы</h1>
+      <div style="background: var(--bg-surface); padding: 32px; border-radius: var(--radius-lg); border: 1px solid var(--border); max-width: 500px; box-shadow: var(--shadow-sm);">
+        <div class="form-group">
+          <label>Наценка за выходные дни (%)</label>
+          <input type="number" value="20" id="setting-markup">
+        </div>
+        <div class="form-group">
+          <label>Минимальный возраст водителя</label>
+          <input type="number" value="21" id="setting-age">
+        </div>
+        <div class="form-group">
+          <label>Валюта отображения</label>
+          <select style="background: var(--bg-main);">
+            <option>Российский рубль (₽)</option>
+            <option>Доллар США ($)</option>
+          </select>
+        </div>
+        <button class="action-btn" style="background: var(--primary); color: white; width: 100%; border: none; padding: 12px; margin-top: 24px; font-weight:600; height: 44px;" id="save-settings-btn">
+          Сохранить настройки
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Модальное окно просмотра фото осмотра для Админа -->
+  <div class="modal-overlay" id="admin-photo-modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="document.getElementById('admin-photo-modal').style.display = 'none'"><i data-lucide="x"></i></button>
+      
+      <h2 style="margin-top: 0; margin-bottom: 24px; font-size: 20px; font-weight:700;">Фотографии осмотра автомобиля</h2>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;" id="admin-photos-grid">
+        <!-- Фотки осмотра с 4 сторон вставятся через admin.ts -->
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/admin.ts"></script>
+</body>
+</html>

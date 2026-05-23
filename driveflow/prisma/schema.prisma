@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- ПОЛЬЗОВАТЕЛИ И РОЛИ ---
+enum Role {
+  CLIENT
+  ADMIN
+  MANAGER
+}
+
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NOT_SUBMITTED
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  phone         String?
+  role          Role      @default(CLIENT)
+  
+  // Документы для KYC (Sumsub/Onfido)
+  passportUrl   String?
+  licenseUrl    String?
+  kycStatus     KycStatus @default(NOT_SUBMITTED)
+
+  bookings      Booking[]
+  reviews       Review[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// --- АВТОМОБИЛИ ---
+enum CarCategory {
+  ECONOMY
+  COMFORT
+  BUSINESS
+  SUV
+  MINIVAN
+}
+
+enum CarStatus {
+  AVAILABLE
+  RENTED
+  MAINTENANCE
+  DIRTY
+}
+
+enum Transmission {
+  MANUAL
+  AUTOMATIC
+}
+
+model Car {
+  id            String       @id @default(uuid())
+  brand         String       // Интеграция с CarQuery API
+  model         String
+  year          Int
+  category      CarCategory
+  transmission  Transmission
+  fuelType      String       // Petrol, Diesel, Electric
+  seats         Int          @default(5)
+  
+  // Цены и телематика
+  pricePerDay   Float        // Базовая цена (будет меняться динамически)
+  status        CarStatus    @default(AVAILABLE)
+  mileage       Int          @default(0)
+  fuelLevel     Int          @default(100) // % бака (Телематика)
+  locationLat   Float?       // Геолокация
+  locationLng   Float?
+  
+  // Фичи
+  hasChildSeat  Boolean      @default(false)
+  hasGps        Boolean      @default(false)
+  
+  images        String[]     // URL фотографий автомобиля
+
+  bookings      Booking[]
+  reviews       Review[]
+
+  createdAt     DateTime     @default(now())
+}
+
+// --- БРОНИРОВАНИЕ ---
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model Booking {
+  id            String        @id @default(uuid())
+  userId        String
+  carId         String
+  
+  startDate     DateTime
+  endDate       DateTime
+  totalPrice    Float         // Итоговая цена с учетом выходных дней
+  status        BookingStatus @default(PENDING)
+  
+  // Связи
+  user          User          @relation(fields: [userId], references: [id])
+  car           Car           @relation(fields: [carId], references: [id])
+  inspection    Inspection?
+  
+  contractUrl   String?       // Ссылка на сгенерированный PDF-договор
+
+  createdAt     DateTime      @default(now())
+}
+
+// --- МОДУЛЬ ОСМОТРА АВТО (Фотофиксация) ---
+model Inspection {
+  id            String   @id @default(uuid())
+  bookingId     String   @unique
+  booking       Booking  @relation(fields: [bookingId], references: [id])
+  
+  // Фото до начала аренды
+  frontImgUrl   String
+  backImgUrl    String
+  leftImgUrl    String
+  rightImgUrl   String
+  
+  // Заметки арендатора/менеджера о царапинах
+  notes         String?  
+
+  createdAt     DateTime @default(now())
+}
+
+// --- ОТЗЫВЫ ---
+model Review {
+  id            String   @id @default(uuid())
+  rating        Int      // от 1 до 5
+  text          String?
+  
+  userId        String
+  carId         String
+  
+  user          User     @relation(fields: [userId], references: [id])
+  car           Car      @relation(fields: [carId], references: [id])
+
+  createdAt     DateTime @default(now())
+}

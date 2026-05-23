@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru" style="scroll-behavior: smooth;"> <!-- Плавный скролл -->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DriveFlow | Аренда авто</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  
+  <header class="header">
+    <div class="container header-inner">
+      <div class="logo">DriveFlow.</div>
+      <nav class="nav">
+        <a href="#catalog-section">Автопарк</a>
+        <a href="#terms-section">Условия</a>
+        <a href="#contacts-section">Контакты</a>
+      </nav>
+      <button class="btn btn-primary" id="login-btn">Войти</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container hero-content">
+      <h1 class="hero-title">Твой идеальный автомобиль<br>в один клик.</h1>
+      <p style="color: var(--text-body); max-width: 500px; margin: -20px auto 40px auto; font-size: 18px;">
+        Быстрое онлайн-бронирование, прозрачные цены и честный осмотр автомобиля через приложение.
+      </p>
+      <a href="#catalog-section" class="btn btn-black" style="display: inline-flex; margin: 0 auto;">Выбрать машину</a>
+    </div>
+  </section>
+
+  <!-- Секция Каталога -->
+  <section class="catalog container" id="catalog-section">
+    <aside class="sidebar">
+      <h3 style="margin-top: 0; font-size: 16px; color: var(--text-heading);">Категория</h3>
+      <label class="filter-label"><input type="checkbox" class="filter-category" value="SUV"> Внедорожники</label>
+      <label class="filter-label"><input type="checkbox" class="filter-category" value="BUSINESS"> Бизнес-класс</label>
+      <label class="filter-label"><input type="checkbox" class="filter-category" value="ECONOMY"> Эконом</label>
+      
+      <h3 style="margin-top: 24px; font-size: 16px; color: var(--text-heading);">Коробка передач</h3>
+      <label class="filter-label"><input type="checkbox" class="filter-transmission" value="AUTOMATIC"> Автомат</label>
+      <label class="filter-label"><input type="checkbox" class="filter-transmission" value="MANUAL"> Механика</label>
+    </aside>
+    
+    <div class="car-grid" id="car-grid"></div>
+  </section>
+
+  <!-- Личный кабинет пользователя (История и KYC) -->
+  <section id="cabinet-section" class="container" style="padding: 60px 20px; display: none; border-top: 1px solid #E2E8F0;">
+    <h2 style="font-size: 28px; margin-bottom: 32px;">Личный кабинет</h2>
+    
+    <div style="display: grid; grid-template-columns: 320px 1fr; gap: 40px;">
+      
+      <!-- Панель KYC верификации -->
+      <div style="background: white; padding: 24px; border-radius: 16px; border: 1px solid #E2E8F0; height: fit-content;">
+        <h3 style="margin-top: 0; font-size: 18px;">Верификация водителя</h3>
+        <div id="kyc-status-container" style="margin-bottom: 20px; font-weight: 600;">
+          Статус: <span style="color: var(--text-muted);">Загрузите документы</span>
+        </div>
+        
+        <div id="kyc-form">
+          <div class="form-group" style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;">
+            <label style="font-size:12px;">Серия и номер паспорта</label>
+            <input type="text" id="kyc-passport" class="date-input" style="background: var(--bg-main);" placeholder="Например: 9214 123456">
+          </div>
+          <div class="form-group" style="display:flex; flex-direction:column; gap:6px; margin-bottom:20px;">
+            <label style="font-size:12px;">Номер водительских прав</label>
+            <input type="text" id="kyc-license" class="date-input" style="background: var(--bg-main);" placeholder="Например: 9912 654321">
+          </div>
+          <button class="btn btn-black" style="width: 100%; justify-content: center;" id="submit-kyc-btn">Отправить на проверку</button>
+        </div>
+      </div>
+
+      <!-- История бронирований -->
+      <div>
+        <h3 style="margin-top: 0; font-size: 18px; margin-bottom: 20px;">Мои поездки</h3>
+        <div style="display: flex; flex-direction: column; gap: 16px;" id="user-bookings-list">
+          <p style="color: var(--text-muted);">История поездок пуста.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Модальное окно Осмотра (Загрузка 4-х фото) -->
+  <div class="modal-overlay" id="inspection-modal">
+    <div class="modal-content glass" style="max-width: 450px;">
+      <button class="modal-close" onclick="document.getElementById('inspection-modal').classList.remove('active')"><i data-lucide="x"></i></button>
+      <h2 style="margin-top: 0; margin-bottom: 20px;">Фотоосмотр автомобиля</h2>
+      <p style="font-size: 13px; color: var(--text-body); margin-bottom: 24px;">Загрузите 4 фотографии автомобиля с разных ракурсов, чтобы зафиксировать текущее состояние кузова.</p>
+      
+      <form id="inspection-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <input type="hidden" id="inspect-booking-id">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group"><label style="font-size: 12px;">Вид Спереди</label><input type="file" id="file-front" required></div>
+          <div class="form-group"><label style="font-size: 12px;">Вид Сзади</label><input type="file" id="file-back" required></div>
+          <div class="form-group"><label style="font-size: 12px;">Левый борт</label><input type="file" id="file-left" required></div>
+          <div class="form-group"><label style="font-size: 12px;">Правый борт</label><input type="file" id="file-right" required></div>
+        </div>
+        <div class="form-group">
+          <label style="font-size: 12px;">Заметки (необязательно)</label>
+          <input type="text" id="inspect-notes" class="date-input" style="background: white;" placeholder="Царапина на бампере и т.д.">
+        </div>
+        <button type="submit" class="btn btn-black" style="justify-content: center; height: 44px; margin-top: 12px;">Завершить осмотр и получить договор</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Секция Условия -->
+  <section id="terms-section" class="container" style="padding: 80px 20px; border-top: 1px solid #E2E8F0;">
+    <h2 style="font-size: 32px; margin-bottom: 12px; text-align: center;">Условия аренды</h2>
+    <p style="text-align: center; color: var(--text-body); margin-bottom: 48px;">Всё просто, прозрачно и без скрытых комиссий.</p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px;">
+      <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #E2E8F0;">
+        <h4 style="margin-top: 0; font-size: 18px;">Возраст и стаж</h4>
+        <p style="font-size: 14px; color: var(--text-body);">Для аренды авто эконом-класса достаточно возраста от 21 года и стажа вождения от 2 лет.</p>
+      </div>
+      <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #E2E8F0;">
+        <h4 style="margin-top: 0; font-size: 18px;">Документы</h4>
+        <p style="font-size: 14px; color: var(--text-body);">Вам понадобятся только паспорт и водительское удостоверение. Загрузка происходит онлайн за 2 минуты.</p>
+      </div>
+      <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #E2E8F0;">
+        <h4 style="margin-top: 0; font-size: 18px;">Страхование</h4>
+        <p style="font-size: 14px; color: var(--text-body);">Все наши автомобили застрахованы по ОСАГО и КАСКО. Ваша ответственность строго ограничена.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Секция Контакты -->
+  <section id="contacts-section" style="background: #1E293B; color: white; padding: 80px 20px;">
+    <div class="container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px;">
+      <div>
+        <h2 style="color: white; margin-top: 0;">DriveFlow.</h2>
+        <p style="color: #94A3B8;">Современный каршеринг и аренда автомобилей на любой срок.</p>
+        <p style="color: #94A3B8; margin-top: 24px;">📍 г. Казань, ул. Пушкина, д. 10</p>
+        <p style="color: #94A3B8;">📞 +7 (843) 123-45-67</p>
+      </div>
+      <div style="background: rgba(255,255,255,0.05); padding: 32px; border-radius: 16px;">
+        <h3 style="color: white; margin-top: 0; margin-bottom: 16px;">Напишите нам</h3>
+        <input type="text" placeholder="Ваше имя" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: none; border-radius: 8px; color: white; margin-bottom: 12px; outline: none;" />
+        <button class="btn btn-primary" style="width: 100%; justify-content: center; background: white; color: black;">Отправить</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Модальное окно бронирования -->
+  <div class="modal-overlay" id="booking-modal">
+    <div class="modal-content glass">
+      <button class="modal-close" id="close-modal"><i data-lucide="x"></i></button>
+      <h2 style="margin-top: 0;">Оформление аренды</h2>
+      <div id="modal-car-info" style="margin-bottom: 24px; font-weight: 600; color: var(--color-primary);"></div>
+      <div class="date-picker-group">
+        <div class="search-field" style="width: 100%;">
+          <label>Начало аренды</label>
+          <input type="date" id="start-date" class="date-input" />
+        </div>
+        <div class="search-field" style="width: 100%;">
+          <label>Конец аренды</label>
+          <input type="date" id="end-date" class="date-input" />
+        </div>
+      </div>
+      <div class="price-calculator">
+        <div class="price-row"><span>Базовая ставка:</span><span id="calc-base">0 ₽ / день</span></div>
+        <div class="price-row" style="color: var(--color-warning);"><span>Наценка за выходные (+20%):</span><span id="calc-weekend">0 дней</span></div>
+        <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 16px 0;">
+        <div class="price-row total"><span>Итого:</span><span id="calc-total">0 ₽</span></div>
+      </div>
+      <button class="btn btn-black" style="width: 100%; justify-content: center; margin-top: 24px;" id="confirm-booking-btn">Подтвердить и Оплатить</button>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+  <!-- Модальное окно Авторизации -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal-content glass" style="max-width: 400px;">
+      <button class="modal-close" id="close-auth-modal"><i data-lucide="x"></i></button>
+      
+      <!-- Форма Входа -->
+      <div id="login-form-container">
+        <h2 style="margin-top: 0; margin-bottom: 24px;">Вход в систему</h2>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">
+          <label style="font-size:12px; font-weight:600;">Email</label>
+          <input type="email" id="login-email" class="date-input" style="background: white;" placeholder="name@mail.com" required>
+        </div>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:6px; margin-bottom:24px;">
+          <label style="font-size:12px; font-weight:600;">Пароль</label>
+          <input type="password" id="login-password" class="date-input" style="background: white;" placeholder="••••••••" required>
+        </div>
+        <button class="btn btn-black" style="width: 100%; justify-content: center;" id="submit-login-btn">Войти</button>
+        <p style="font-size: 13px; text-align: center; margin-top: 20px; color: var(--text-body);">
+          Нет аккаунта? <a href="#" id="go-to-register" style="color: var(--color-primary); font-weight: 600; text-decoration: none;">Создать</a>
+        </p>
+      </div>
+
+      <!-- Форма Регистрации -->
+      <div id="register-form-container" style="display: none;">
+        <h2 style="margin-top: 0; margin-bottom: 24px;">Регистрация</h2>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;">
+          <label style="font-size:12px; font-weight:600;">Имя</label>
+          <input type="text" id="reg-name" class="date-input" style="background: white;" placeholder="Атабек" required>
+        </div>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;">
+          <label style="font-size:12px; font-weight:600;">Email</label>
+          <input type="email" id="reg-email" class="date-input" style="background: white;" placeholder="name@mail.com" required>
+        </div>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;">
+          <label style="font-size:12px; font-weight:600;">Пароль</label>
+          <input type="password" id="reg-password" class="date-input" style="background: white;" placeholder="Минимум 6 символов" required>
+        </div>
+        <button class="btn btn-black" style="width: 100%; justify-content: center;" id="submit-register-btn">Зарегистрироваться</button>
+        <p style="font-size: 13px; text-align: center; margin-top: 20px; color: var(--text-body);">
+          Уже есть аккаунт? <a href="#" id="go-to-login" style="color: var(--color-primary); font-weight: 600; text-decoration: none;">Войти</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
