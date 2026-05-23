@@ -425,6 +425,7 @@ document.getElementById('submit-register-btn')?.addEventListener('click', async 
       location.reload();
     } else { alert(data.error); }
   } catch (err) { alert('Ошибка регистрации'); 
+});
                  
 document.addEventListener('DOMContentLoaded', () => {
   fetchCars();
