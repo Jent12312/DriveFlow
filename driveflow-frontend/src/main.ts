@@ -1,4 +1,5 @@
 // src/main.ts
+declare const lucide: any;
 // @ts-ignore
 if (typeof lucide !== 'undefined') {
   lucide.createIcons();
