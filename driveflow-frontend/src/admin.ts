@@ -5,9 +5,11 @@ if (typeof lucide !== 'undefined') {
   lucide.createIcons();
 }
 
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:3000/api'
-  : 'https://api.driveflow.jents.online/api';
+const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000'
+  : 'https://api.driveflow.jents.online';
+
+const API_URL = `${BACKEND_URL}/api`;
 const adminHeaders = {
   'x-user-role': 'ADMIN'
 };
@@ -62,7 +64,7 @@ async function loadDashboard() {
   const grid = document.getElementById('admin-photos-grid');
   if (!grid) return;
 
-  const backendHost = API_URL.replace('/api', '').replace(/\/$/, '');
+  const backendHost = BACKEND_URL;
 
   grid.innerHTML = `
     <div><p style="font-size:12px; margin:0 0 4px 0; font-weight:600;">Спереди</p><img src="${backendHost}${inspection.frontImgUrl}" style="width:100%; height:180px; object-fit:cover; border-radius:8px; border:1px solid #E2E8F0;"></div>

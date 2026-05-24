@@ -4,10 +4,11 @@ declare const lucide: any;
 lucide.createIcons();
 
 // Автоопределение адреса API
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:3000/api'
-  : 'https://api.driveflow.jents.online/api';
+const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000'
+  : 'https://api.driveflow.jents.online';
 
+const API_URL = `${BACKEND_URL}/api`;
 const carGrid = document.getElementById('car-grid');
 
 interface Car {
@@ -44,8 +45,7 @@ function renderCars(cars: Car[]) {
     const fallbackImage = `https://placehold.co/600x400/1e293b/ffffff?text=${encodeURIComponent(car.brand + ' ' + car.model)}`;
 
     // Безопасное формирование URL (убираем лишние слэши на стыке домена и пути)
-    const cleanBaseUrl = API_URL.replace('/api', '').replace(/\/$/, '');
-    const finalImageUrl = imageUrl.startsWith('/') ? `${cleanBaseUrl}${imageUrl}` : imageUrl;
+    const finalImageUrl = imageUrl.startsWith('/') ? `${BACKEND_URL}${imageUrl}` : imageUrl;
 
     const card = document.createElement('div');
     card.className = 'car-card';
@@ -196,7 +196,7 @@ async function loadUserBookings(userId: string) {
     }
 
     list.innerHTML = '';
-    const backendHost = API_URL.replace('/api', '');
+    const backendHost = BACKEND_URL;
 
     bookings.forEach((b: any) => {
       let actionBtn = '';

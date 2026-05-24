@@ -18,9 +18,8 @@ export const generateContractPDF = async (booking: any, user: any, car: any): Pr
     doc.pipe(writeStream);
 
     // Безопасное разрешение путей к шрифтам относительно корня проекта (работает в ts-node и в Docker)
-    const fontPath = path.join(process.cwd(), 'src/fonts/Roboto-Regular.ttf');
-    const fontBoldPath = path.join(process.cwd(), 'src/fonts/Roboto-Bold.ttf');
-
+    const fontPath = path.join(process.cwd(), 'fonts/Roboto-Regular.ttf');
+    const fontBoldPath = path.join(process.cwd(), 'fonts/Roboto-Bold.ttf');
     // Регистрируем шрифты в PDFKit
     doc.registerFont('Roboto', fontPath);
     doc.registerFont('Roboto-Bold', fontBoldPath);
