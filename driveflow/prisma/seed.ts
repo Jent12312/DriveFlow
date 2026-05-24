@@ -1,5 +1,6 @@
 // prisma/seed.ts
-import { PrismaClient, CarCategory, Transmission, CarStatus, KycStatus } from '@prisma/client';
+// @ts-ignore
+const { PrismaClient, CarCategory, Transmission, CarStatus, KycStatus } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
@@ -10,17 +11,17 @@ async function main() {
   await prisma.car.deleteMany();
   await prisma.user.deleteMany();
 
-  console.log('👤 Создание тестового пользователя...');
-  const testUser = await prisma.user.create({
+  console.log('👤 Создание тестового пользователя Иван Иванов...');
+  await prisma.user.create({
     data: {
-      id: 'client-user-id', // Фиксированный ID для бесшовной локальной и серверной работы
+      id: 'client-user-id',
       email: 'client@driveflow.ru',
-      passwordHash: '$2a$10$Y5V48Qv7X8gA1A9S3gP8O.D3P2t1r8B1w2o3i4p5e6r7t8y9u0i1o', // пароль: password123
+      passwordHash: '$2a$10$Y5V48Qv7X8gA1A9S3gP8O.D3P2t1r8B1w2o3i4p5e6r7t8y9u0i1o', // password123
       firstName: 'Иван',
       lastName: 'Иванов',
       phone: '+7 (999) 123-45-67',
       role: 'CLIENT',
-      kycStatus: KycStatus.APPROVED // Сразу одобрен для мгновенного теста брони!
+      kycStatus: KycStatus.APPROVED
     }
   });
 
@@ -164,7 +165,7 @@ async function main() {
     ]
   });
 
-  console.log('✅ База данных успешно очищена и заполнена 10 сочными автомобилями!');
+  console.log('✅ База данных успешно очищена и наполнена 10 шикарными автомобилями!');
 }
 
 main()
