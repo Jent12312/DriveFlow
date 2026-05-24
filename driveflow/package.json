@@ -36,6 +36,6 @@
     "vite": "^8.0.13"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.js"
   }
 }

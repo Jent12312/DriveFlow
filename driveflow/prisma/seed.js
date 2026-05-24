@@ -1,5 +1,4 @@
-// prisma/seed.ts
-// @ts-ignore
+// prisma/seed.js
 const { PrismaClient, CarCategory, Transmission, CarStatus, KycStatus } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -11,7 +10,7 @@ async function main() {
   await prisma.car.deleteMany();
   await prisma.user.deleteMany();
 
-  console.log('👤 Создание тестового пользователя Иван Иванов...');
+  console.log('👤 Создание тестового пользователя...');
   await prisma.user.create({
     data: {
       id: 'client-user-id',
@@ -165,13 +164,13 @@ async function main() {
     ]
   });
 
-  console.log('✅ База данных успешно очищена и наполнена 10 шикарными автомобилями!');
+  console.log('✅ База успешно наполнена!');
 }
 
 main()
   .catch((e) => {
     console.error(e);
-    throw e;
+    process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
