@@ -253,6 +253,19 @@ async function loadUserBookings(userId: string) {
 
 document.getElementById('inspection-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
+
+  const submitForm = e.target as HTMLFormElement;
+  const submitBtn = submitForm.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+  const originalText = submitBtn ? submitBtn.innerText : 'Завершить осмотр и получить договор';
+
+  // 1. Включаем лоадер, блокируем кнопку
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerText = '⌛ Загрузка фото кузова и генерация договора (3-5 сек)...';
+    submitBtn.style.opacity = '0.7';
+    submitBtn.style.cursor = 'not-allowed';
+  }
+
   const formData = new FormData();
   formData.append('bookingId', (document.getElementById('inspect-booking-id') as HTMLInputElement).value);
   formData.append('notes', (document.getElementById('inspect-notes') as HTMLInputElement).value);
@@ -263,7 +276,11 @@ document.getElementById('inspection-form')?.addEventListener('submit', async (e)
   formData.append('right', (document.getElementById('file-right') as HTMLInputElement).files![0]);
 
   try {
-    const res = await fetch(`${API_URL}/inspections`, { method: 'POST', body: formData });
+    const res = await fetch(`${API_URL}/inspections`, {
+      method: 'POST',
+      body: formData
+    });
+    
     if (res.ok) {
       alert('Осмотр пройден! Договор сформирован. Приятной поездки!');
       document.getElementById('inspection-modal')?.classList.remove('active');
@@ -274,6 +291,14 @@ document.getElementById('inspection-form')?.addEventListener('submit', async (e)
     }
   } catch (error) {
     alert('Ошибка при отправке файлов');
+  } finally {
+    // 2. Выключаем лоадер в любом случае завершения запроса
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerText = originalText;
+      submitBtn.style.opacity = '1';
+      submitBtn.style.cursor = 'pointer';
+    }
   }
 });
 

@@ -54,10 +54,27 @@ app.post('/api/inspections', uploadInspectionPhotos, async (req: any, res: any):
     const leftImgUrl = `/uploads/inspections/${files.left[0].filename}`;
     const rightImgUrl = `/uploads/inspections/${files.right[0].filename}`;
 
-    // 1. Создаем осмотр в БД
-    const inspection = await prisma.inspection.create({
-      data: { bookingId, notes: notes || '', frontImgUrl, backImgUrl, leftImgUrl, rightImgUrl }
+    // 1. ИСПРАВЛЕНИЕ P2002: Проверяем, есть ли уже осмотр для этой брони
+    const existingInspection = await prisma.inspection.findUnique({
+      where: { bookingId }
     });
+
+    let inspection;
+
+    if (existingInspection) {
+      // Если осмотр уже создавался ранее — перезаписываем его новыми фото
+      console.log(`🔄 Перезаписываем существующий осмотр для брони: ${bookingId}`);
+      inspection = await prisma.inspection.update({
+        where: { bookingId },
+        data: { notes: notes || '', frontImgUrl, backImgUrl, leftImgUrl, rightImgUrl }
+      });
+    } else {
+      // Если это первая попытка — создаем новую запись
+      console.log(`📝 Создаем новый осмотр для брони: ${bookingId}`);
+      inspection = await prisma.inspection.create({
+        data: { bookingId, notes: notes || '', frontImgUrl, backImgUrl, leftImgUrl, rightImgUrl }
+      });
+    }
 
     // 2. Получаем полные данные бронирования для PDF договора
     const booking = await prisma.booking.findUnique({
@@ -66,7 +83,8 @@ app.post('/api/inspections', uploadInspectionPhotos, async (req: any, res: any):
     });
 
     if (booking) {
-      // Генерируем красивый PDF договор
+      console.log(`📄 Верстаем PDF договор для брони: ${booking.id}...`);
+      // Генерируем красивый PDF договор (шрифты теперь найдутся успешно!)
       const contractUrl = await generateContractPDF(booking, booking.user, booking.car);
 
       // 3. Обновляем бронирование: прикрепляем договор и переводим в статус ACTIVE
@@ -74,14 +92,15 @@ app.post('/api/inspections', uploadInspectionPhotos, async (req: any, res: any):
         where: { id: bookingId },
         data: { 
           status: 'ACTIVE',
-          contractUrl: contractUrl // Ссылка на скачивание
+          contractUrl: contractUrl
         }
       });
+      console.log(`✅ Договор успешно сгенерирован: ${contractUrl}`);
     }
 
     res.status(201).json({ message: 'Осмотр пройден, договор сгенерирован!', inspection });
   } catch (error) {
-    console.error(error);
+    console.error('❌ Ошибка сохранения осмотра:', error);
     res.status(500).json({ error: 'Ошибка сохранения осмотра' });
   }
 });
