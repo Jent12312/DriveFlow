@@ -68,11 +68,11 @@ export const getAllBookings = async (req: Request, res: Response) => {
 
 export const updateCarStatus = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id  = req.params.id as string;
     const { status } = req.body;
 
     const updatedCar = await prisma.car.update({
-      where: { id },
+      where: { id: id },
       data: { status: status as CarStatus }
     });
     res.json(updatedCar);
